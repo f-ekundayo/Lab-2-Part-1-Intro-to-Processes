@@ -1,40 +1,64 @@
+
 #include <stdio.h>
+#include <sys/types.h>
 #include <stdlib.h>
 
-void child_process();
-// parent process
-int main (){
-  int pid;
-  int i; 
-  for (i = 0; i<2; i++){
-    pid = fork(); // stores two child pids
-    if (pid == 0) 
-				child_process();
-    else if (pid<0) 
-				exit(1);
+
+void ChildProcessOne(void);
+void ChildProcessTwo(void);
+void ParentProcess(void);
+
+void main(void){
+
+  pid_t pid, pid2, finished_pid;
+  pid = fork();
+
+  if (pid < 0){
+    perror("First fork failed\n");
+  }else if (pid == 0){
+    ChildProcessOne();
+  }else{
+    pid2 = fork();
+    if (pid2 < 0){
+      perror("First fork failed\n");
+    }else if (pid2 == 0){
+      ChildProcessTwo();
+    }
+    finished_pid = wait(NULL);
+    printf("Child Pid: %d has completed\n", finished_pid);
+    finished_pid = wait(NULL);
+    printf("Child Pid: %d has completed\n", finished_pid);
   }
 
-  for (i=0; i < 2; i++){
-    int status;
-    int completed_pid = wait(&status);
-    printf("Child Pid: %d has completed with exit status: %d\n", completed_pid, status);
-  }
 }
 
-// run one child process
-void child_process(){
-  int pid = getpid();
-  int parent_pid = getppid();
-  srandom(pid % 42); // seeding random number
-  int n = 1 + (random() % 30); // random number no more than 30
+void ChildProcessOne(void){
+  int max_loop;
+  int max_sleep;
   int i;
-  for (i=0; i < 2; i++){
-    int time = 1 + (random() % 10); // sleep time no more than 10 seconds
-    printf("Child Pid: %d is going to sleep for %d seconds!\n", pid, time);
-    sleep(time); // sleep
-    printf("Child Pid: %d is awake!\nWhere is my Parent: %d?\n", pid, parent_pid); // print if awake
-  }
+  srandom(50);
+  max_loop = random() % 30;
+  max_sleep = random() % 10;
+  for (i = 1; i <= max_loop; i++){
+    printf("Child Pid: %d is going to sleep!\n", getpid());
+    sleep(max_sleep);
+    printf("Child Pid: %d is awake!\nWhere is my Parent: %d\n", getpid(), getppid());
+  };
+  exit(0);
+
+}
+
+void ChildProcessTwo(void){
+  int max_loop;
+  int max_sleep;
+  int i;
+  srandom(50);
+  max_loop = random() % 30;
+  max_sleep = random() % 10;
+  for (i = 1; i <= max_loop; i++){
+    printf("Child Pid: %d is going to sleep!\n", getpid());
+    sleep(max_sleep);
+    printf("Child Pid: %d is awake!\nWhere is my Parent: %d\n", getpid(), getppid());
+  };
   exit(0);
 }
-
-
